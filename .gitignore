@@ -1,10 +1,10 @@
 ./acs71020LibArduino/*
 ./acs37800ExamplesArduino/*
 ./esp32acs37800/*
-.git
-.vscode/
-.DS_Store
-.idea/
+./server_side/iss-stack/*
+./esp018266-iss-client/*
+*.pio/*
+*.vscode/*
+*.DS_Store
+*.idea/*
 *.log
-*.tmp
-*.bak
