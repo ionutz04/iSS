@@ -1,0 +1,66 @@
+services:
+    influxdb:
+        build: ./influxdb
+        container_name: tig_customer_influxdb
+        ports:
+            - "${INFLUXDB_PORT}:8086"
+        volumes:
+            # InfluxDB 2.x uses /var/lib/influxdb2
+            - influxdb-data:/var/lib/influxdb2
+        restart: always
+        env_file:
+            - .env
+        networks:
+            - backend
+
+    telegraf:
+        build: ./telegraf
+        container_name: tig_customer_telegraf
+        ports:
+            - "${TELEGRAF_HTTPS_PORT}:8443"
+        links:
+            - influxdb
+        volumes:
+            - telegraf-certs:/etc/telegraf/certs
+        restart: always
+        env_file:
+            - .env
+        depends_on:
+            - influxdb
+        networks: 
+            - backend
+            - frontend
+            
+    grafana:
+        image: grafana/grafana:latest
+        container_name: tig_customer_grafana
+        restart: unless-stopped
+        ports:
+            - "${GRAFANA_PORT}:3000"
+        volumes:
+            - grafana-storage:/var/lib/grafana
+            - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+            - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+            - ./grafana/dashboards:/var/lib/grafana/dashboards
+        environment:
+            - GF_SECURITY_ADMIN_USER=${GRAFANA_USER}
+            - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+            - GF_SERVER_DOMAIN=localhost
+            - GF_USERS_DEFAULT_THEME=light
+            - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/var/lib/grafana/dashboards/power-monitoring.json
+        env_file:
+            - .env
+        depends_on:
+            - influxdb
+        networks:
+            - backend
+            - frontend
+
+networks:
+    backend:
+    frontend:
+
+volumes:
+    influxdb-data:
+    telegraf-certs:
+    grafana-storage:

@@ -1,0 +1,77 @@
+# Telegraf Configuration for IoT Sensor Data Ingestion
+# Single Client Stack - Customer ID: ${CUSTOMER_ID}
+# InfluxDB 2.x Compatible
+
+###############################################################################
+#                            GLOBAL CONFIGURATION                             #
+###############################################################################
+
+[global_tags]
+  customer_id = "${CUSTOMER_ID}"
+
+[agent]
+  interval = "10s"
+  round_interval = true
+  metric_batch_size = 1000
+  metric_buffer_limit = 10000
+  collection_jitter = "0s"
+  flush_interval = "10s"
+  flush_jitter = "0s"
+  precision = ""
+  debug = false
+  quiet = false
+  hostname = "${TELEGRAF_HOST}"
+  omit_hostname = false
+
+###############################################################################
+#                            OUTPUT PLUGINS                                   #
+###############################################################################
+
+# Send all metrics to InfluxDB 2.x
+[[outputs.influxdb_v2]]
+  urls = ["http://${INFLUXDB_HOST}:${INFLUXDB_PORT}"]
+  
+  # Token for authentication
+  token = "${INFLUXDB_TOKEN}"
+  
+  # Organization
+  organization = "${INFLUXDB_ORG}"
+  
+  # Bucket (derived from customer_id in run.sh)
+  bucket = "${INFLUXDB_BUCKET}"
+  
+  # Timeout
+  timeout = "5s"
+
+###############################################################################
+#                            INPUT PLUGINS                                    #
+###############################################################################
+
+# HTTPS REST API endpoint for ESP8266 sensor data
+[[inputs.http_listener_v2]]
+  # Listen on port 8443 with TLS
+  service_address = ":8443"
+  
+  # API endpoint paths
+  paths = ["/telegraf", "/api/v1/sensors"]
+  
+  # Accept POST requests only
+  methods = ["POST"]
+  
+  # TLS Configuration
+  tls_cert = "${CERT_FILE}"
+  tls_key = "${KEY_FILE}"
+  tls_min_version = "TLS12"
+  
+  # HTTP Basic Authentication
+  # ESP8266 must send: Authorization: Basic base64(customer_id:api_secret)
+  basic_username = "${CUSTOMER_ID}"
+  basic_password = "${API_SECRET}"
+  
+  # Data format - InfluxDB line protocol
+  # Example: power,device=esp01 voltage=220.5,current=1.2,power=264.6
+  data_format = "influx"
+  
+  # Add tags to all incoming metrics
+  [inputs.http_listener_v2.tags]
+    source = "esp8266"

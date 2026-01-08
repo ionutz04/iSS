@@ -1,3 +1,5 @@
 ./acs71020LibArduino/*
 ./acs37800ExamplesArduino/*
 ./esp32acs37800/*
+./server_side/iss-stack/*
+./esp018266-iss-client/*
