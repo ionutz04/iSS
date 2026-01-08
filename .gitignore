@@ -3,3 +3,8 @@
 ./esp32acs37800/*
 ./server_side/iss-stack/*
 ./esp018266-iss-client/*
+*.pio/*
+*.vscode/*
+*.DS_Store
+*.idea/*
+*.log
